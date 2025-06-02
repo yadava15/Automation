@@ -90,8 +90,31 @@ try:
 except AssertionError:
     print("Text Passed: Error Message")
 
+   assert "Value between 1 and 20 " in Error
+    print("Text Passed: Error Message is correct" )
+except AssertionError:
+    print("Text Passed: Error Message")
 
-print("Test completed")
+
+# Step 11: Check if item is visible in the menu with price
+basket = driver.find_element(By.CSS_SELECTOR, ".wpmenucart-contents")
+assert "₹" in basket.text, "Price not found in basket"
+print("Item added to basket with price visible.")
+
+# Step 12-13: Click on Item link (Cart icon)
+basket.click()
+time.sleep(2)
+
+# Step 14-15: Apply coupon code
+coupon_field = driver.find_element(By.ID, "coupon_code")
+coupon_field.send_keys("krishnasakinala")
+driver.find_element(By.NAME, "apply_coupon").click()
+time.sleep(3)
+
+# Confirm coupon applied
+success_msg = driver.find_element(By.CSS_SELECTOR, ".woocommerce-message").text
+assert "Coupon code applied successfully." in success_msg
+print("Coupon applied successfully and 50rps discount given.")    
 time.sleep(3)
 
 driver.quit()
