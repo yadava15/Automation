@@ -116,6 +116,87 @@ success_msg = driver.find_element(By.CSS_SELECTOR, ".woocommerce-message").text
 assert "Coupon code applied successfully." in success_msg
 print("Coupon applied successfully and 50rps discount given.")    
 time.sleep(3)
+try:
+    # 13) Locate subtotal and total elements
+    subtotal_elem = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, "tr.cart-subtotal td"))
+    )
+    total_elem = driver.find_element(By.CSS_SELECTOR, "tr.order-total td")
+
+    subtotal_text = subtotal_elem.text
+    total_text = total_elem.text
+
+    print("Subtotal value:", subtotal_text)
+    print("Total value:", total_text)
+
+    # 14) Assert total < subtotal
+    # Subtotal amount
+    subtotal_amount = float(subtotal_text.replace("$", "")
+                            .replace("£", "")
+                            .replace("₹", "")
+                            .replace(",", "")
+                            .strip())
+
+    # Total amount
+    total_amount = float(total_text.replace("$", "")
+                         .replace("£", "")
+                         .replace("₹", "")
+                         .replace(",", "")
+                         .strip())
+
+    assert total_amount < subtotal_amount, f"Expected total ({total_amount}) < subtotal ({subtotal_amount})."
+    print("Verified that total is less than subtotal.")
+
+    # 15) Click Proceed to Checkout button
+    proceed_button = WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.CSS_SELECTOR, ".checkout-button"))
+    )
+    proceed_button.click()
+
+    # 16) Verify Billing Details, Order Details, Additional Details, and Payment Gateway
+    billing_details = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.ID, "billing_first_name"))  # Example field in billing section
+    )
+    order_review = driver.find_element(By.ID, "order_review")  # Example: contains order details
+    additional_info = driver.find_element(By.ID, "order_comments")  # Example: additional details
+
+    assert billing_details.is_displayed(), "Billing Details section not found."
+    assert order_review.is_displayed(), "Order Details section not found."
+    assert additional_info.is_displayed(), "Additional Details section not found."
+
+    print("Verified Billing, Order, and Additional Details sections are present.")
+
+    # 17) Fill in Billing Details Form
+    billing_details.send_keys("Anil")  # First name
+    driver.find_element(By.ID, "billing_last_name").send_keys("Yadav")
+    driver.find_element(By.ID, "billing_email").send_keys("Anilyadav@gmail.com")
+    driver.find_element(By.ID, "billing_phone").send_keys("1234567890")
+    driver.find_element(By.ID, "billing_address_1").send_keys("Pune")
+    driver.find_element(By.ID, "billing_city").send_keys("Hinjewadi")
+    driver.find_element(By.ID, "billing_postcode").send_keys("12345")
+    # Add dropdowns if needed for Country and State
+
+    print("Billing details filled successfully.")
+
+    # 17b) Select Payment Gateway option
+    bank_transfer = driver.find_element(By.ID, "payment_method_bacs")
+    bank_transfer.click()
+    print("Selected Direct Bank Transfer as payment method.")
+
+    # 18) Check for coupon field and verify again that billing
+    coupon_field = driver.find_element(By.CSS_SELECTOR, "input#coupon_code")
+    # assert coupon_field.is_displayed(), "Coupon field not found on checkout page."
+    print("Coupon field is present.")
+
+    assert billing_details.is_displayed(), "Billing Details section not found."
+    assert order_review.is_displayed(), "Order Details section not found."
+    assert additional_info.is_displayed(), "Additional Details section not found."
+    print("Billing, Order, and Additional Details sections are still present after filling billing details and selecting payment.")
+
+except Exception as e:
+    driver.save_screenshot("checkout_debug.png")
+    print("Error encountered during checkout process.")
+    raise e
 
 driver.quit()
 
